@@ -130,3 +130,10 @@ dmypy.json
 
 # .idea
 .idea
+
+# old load file
+new_export.py
+
+# node модули
+node_modules/
+build/
