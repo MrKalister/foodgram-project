@@ -1,3 +1,4 @@
+""" 
 import uuid
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -147,3 +148,4 @@ def token_obtain(request):
             status=status.HTTP_200_OK
         )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+ """

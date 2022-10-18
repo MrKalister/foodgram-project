@@ -1,10 +1,12 @@
-import os
-from django.core.management.base import BaseCommand
 import json
-from recipes.models import Ingredient
-from foodgram.settings import CSV_FILES_DIR
+import os
 
-    
+from django.core.management.base import BaseCommand
+
+from foodgram.settings import CSV_FILES_DIR
+from recipes.models import Ingredient
+
+
 class Command(BaseCommand):
     def handle(self, *args, **options):
         json_path = os.path.join(CSV_FILES_DIR, 'ingredients.json')

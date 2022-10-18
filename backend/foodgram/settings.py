@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -16,11 +16,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework.authtoken',
     'rest_framework',
     'django_filters',
+    'djoser',
     'recipes',
     'users',
-    # 'api'
+    'api'
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -49,7 +51,7 @@ TEMPLATES = [
     },
 ]
 WSGI_APPLICATION = 'foodgram.wsgi.application'
-# Database
+# Database SQLite
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 DATABASES = {
     'default': {
@@ -82,25 +84,37 @@ USE_L10N = True
 USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 CSV_FILES_DIR = os.path.join(BASE_DIR, '..', 'data')
 
 # E-mail settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # REST FRAMEWORK settings
 REST_FRAMEWORK = {
-    # настроить пермишены
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
         # 'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 5,
+
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ]
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 6,
+
 }
-# JWT-tokens
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=30)
+
+DJOSER = {
+    'SERIALIZERS':{
+        'user_create': 'api.serializers.CustumUserCreateSerializer',
+        'user': 'api.serializers.CustumUserSerializer',
+        'current_user': 'api.serializers.CustumUserSerializer',  
+    }
 }

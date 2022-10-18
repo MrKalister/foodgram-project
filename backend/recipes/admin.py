@@ -1,7 +1,8 @@
 from django.contrib import admin
 
-from .models import Ingredient, Tag, Recipe, IngredientRecipe
 from users.models import User
+
+from .models import Ingredient, IngredientRecipe, Recipe, Tag
 
 
 class IngredientRecipeInline(admin.TabularInline):
@@ -16,7 +17,6 @@ class UserAdmin(admin.ModelAdmin):
         'email',
         'first_name',
         'last_name',
-        'role'
     )
     search_fields = ('username', 'email',)
     list_filter = ('username', 'email',)
