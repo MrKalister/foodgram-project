@@ -92,6 +92,9 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CSV_FILES_DIR = os.path.join(BASE_DIR, '..', 'data')
+FONTS_FILES_DIR = os.path.join(CSV_FILES_DIR, 'HelveticaRegular.ttf')
+
+
 
 # E-mail settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

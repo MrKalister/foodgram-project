@@ -1,7 +1,7 @@
-from xml.dom import ValidationErr
 import base64
 import webcolors
 
+from rest_framework.validators import UniqueTogetherValidator
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
@@ -14,7 +14,7 @@ from rest_framework.serializers import (ModelSerializer,
                                         IntegerField, BooleanField)
                                         
 
-from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag
+from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag, Favorite, ShoppingCart
 from users.models import Follow, User
 
 
@@ -95,25 +95,36 @@ class FollowListSerializer(CustumUserSerializer):
         return obj.recipes.count()
 
 
-class FollowSerializer(CustumUserSerializer):
+class FollowSerializer(ModelSerializer):
+    user = SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        default=UserSerializer()
+    )
+    following = SlugRelatedField(
+        slug_field='username',
+        queryset=User.objects.all()
+    )
+
+    def validate_following(self, following):
+        user = self.context.get('request').user
+        if user == following:
+            raise ValidationError(
+                'It is impossible to follow yourself'
+            )
+        return following
+
     class Meta:
         model = Follow
         fields = ('user', 'following')
 
-    def validate(self, data):
-        get_object_or_404(User, username=data['following'])
-        if self.context['request'].user == data['following']:
-            raise ValidationError({
-                'errors': 'Невозможно подписаться на себя.'
-            })
-        if Follow.objects.filter(
-            user=self.context['request'].user,
-            following=data['following']
-        ):
-            raise ValidationError({
-                'errors': 'Вы уже подписаны.'
-            })
-        return data
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=('user', 'following'),
+                message='You are already following'
+            )
+        ]
 
     def to_representation(self, instance):
         return FollowListSerializer(
@@ -146,20 +157,19 @@ class GetIngredientRecipeSerializer(ModelSerializer):
         )
 
 
-
 class RecipeSerializer(ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     author = CustumUserSerializer(read_only=True)
     ingredients = SerializerMethodField()
-    # is_in_shopping_cart = SerializerMethodField(read_only=True)
-    # is_favorited = SerializerMethodField(read_only=True)
+    is_in_shopping_cart = SerializerMethodField(read_only=True)
+    is_favorited = SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
 
         fields = (
             'id', 'tags', 'author', 'ingredients',
-            # 'is_favorited', 'is_in_shopping_cart',
+            'is_favorited', 'is_in_shopping_cart',
             'name', 'image', 'text', 'cooking_time',
         )
 
@@ -167,6 +177,18 @@ class RecipeSerializer(ModelSerializer):
     def get_ingredients(self, obj):
         ingredients = IngredientRecipe.objects.filter(recipe=obj)
         return GetIngredientRecipeSerializer(ingredients, many=True).data
+
+    def get_is_favorited(self, object):
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        return request.user.favorit_user.filter(recipe=object).exists()
+
+    def get_is_in_shopping_cart(self, object):
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        return request.user.shopping_cart.filter(recipe=object).exists()
 
 
 class CreateIngredientRecipeSerializer(ModelSerializer):
@@ -191,6 +213,24 @@ class CreateRecipeSerializer(ModelSerializer):
         ).data
         return data
 
+    def validate_ingredients(self, ingredients):
+        """Проверяем, что рецепт содержит уникальные ингредиенты."""
+        ingredients_data = [
+            ingredient.get('id') for ingredient in ingredients
+        ]
+        if len(ingredients_data) != len(set(ingredients_data)):
+            raise ValidationError(
+                'Ингредиенты рецепта должны быть уникальными'
+            )
+        return ingredients
+
+    def validate_tags(self, tags):
+        """Проверяем, что рецепт содержит уникальные теги."""
+        if len(tags) != len(set(tags)):
+            raise ValidationError(
+                'Теги рецепта должны быть уникальными'
+            )
+        return tags
 
     def add_ingredients(self, ingredients_data, recipe):
         IngredientRecipe.objects.bulk_create([
@@ -211,6 +251,20 @@ class CreateRecipeSerializer(ModelSerializer):
         self.add_ingredients(ingredients_data, recipe)
         return recipe
     
+    def update(self, instance, validated_data):
+        recipe = instance
+        instance.image = validated_data.get('image', instance.image)
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text' , instance.text)
+        instance.cooking_time = validated_data.get('cooking_time', instance.cooking_time)
+        instance.tags.clear()
+        instance.ingredients.clear()
+        instance.tags.set(validated_data.get('tags'))
+        ingredients_data = validated_data.get('ingredients')
+        IngredientRecipe.objects.filter(recipe=recipe).delete()
+        self.add_ingredients(ingredients_data, recipe)
+        instance.save()
+        return instance 
 
     class Meta:
         model = Recipe
@@ -223,3 +277,36 @@ class CreateRecipeSerializer(ModelSerializer):
             'cooking_time'
         )
 
+
+class CreateResponseSerializer(ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class FavoriteSerializer(ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = '__all__'
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Favorite.objects.all(),
+                fields=('user', 'recipe'),
+                message='Вы уже добавляли это рецепт в избранное'
+            )
+        ]
+
+
+class ShoppingCartSerializer(ModelSerializer):
+    """Сериализатор для модели ShoppingCart."""
+
+    class Meta:
+        model = ShoppingCart
+        fields = '__all__'
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ShoppingCart.objects.all(),
+                fields=('user', 'recipe'),
+                message='Вы уже добавляли это рецепт в список покупок'
+            )
+        ]

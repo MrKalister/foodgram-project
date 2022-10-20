@@ -111,3 +111,61 @@ class IngredientRecipe(models.Model):
 
     def __str__(self):
         return f'{self.recipe} содержит ингредиент/ты {self.ingredient}'
+
+
+class Favorite(models.Model):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='favorit_recipe',
+        verbose_name='Рецепт'
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='favorit_user',
+        verbose_name='Пользователь'
+    )
+
+    class Meta:
+        verbose_name = 'Избранный'
+        verbose_name_plural = 'Избранные рецепты'
+        ordering = ('id',)
+        constraints = (
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_user_recipe'
+            ),
+        )
+
+    def __str__(self):
+        return f'{self.recipe} в избранном у {self.user}'
+
+
+class ShoppingCart(models.Model):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='shopping_cart',
+        verbose_name='Рецепт'
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='shopping_cart',
+        verbose_name='Пользователь'
+    )
+
+    class Meta:
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Списки покупок'
+        ordering = ('user',)
+        constraints = (
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_shopping_cart'
+            ),
+        )
+
+    def __str__(self):
+        return f'{self.recipe} в списке покупок у {self.user}'

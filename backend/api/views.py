@@ -1,23 +1,23 @@
-from symbol import subscript
-
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from djoser import utils, views
 from djoser.conf import settings
 from djoser.views import UserViewSet
 from rest_framework import status
+from django.db.models import Sum
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from recipes.models import Ingredient, Recipe, Tag
+from recipes.models import Ingredient, Recipe, Tag, Favorite, ShoppingCart, IngredientRecipe
 from users.models import Follow, User
-
-from .serializers import (CreateRecipeSerializer, FollowListSerializer,
+from .pdf_downloader import create_pdf_file
+from .serializers import (CreateRecipeSerializer, FavoriteSerializer, FollowListSerializer,
                           FollowSerializer, GetIngredientRecipeSerializer,
                           IngredientSerializer, RecipeSerializer,
-                          TagSerializer)
+                          TagSerializer, CreateResponseSerializer,
+                          ShoppingCartSerializer)
 
 
 class CustomTokenCreateView(views.TokenCreateView):
@@ -95,3 +95,73 @@ class RecipeViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+    @action(methods=['post', 'delete'], detail=True,)
+    def favorite(self, request, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        if request.method == 'POST':
+            serializer = FavoriteSerializer(
+                data={'user': request.user.id, 'recipe': pk}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            favorite_serializer = CreateResponseSerializer(recipe)
+            return Response(
+                favorite_serializer.data, status=status.HTTP_201_CREATED
+            )
+        favorite_recipe = Favorite.objects.filter(
+            user=request.user,
+            recipe=recipe
+        )
+        if favorite_recipe:
+            favorite_recipe.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'errors': 'Рецепт уже удален из списка покупок'},
+            status=status.HTTP_400_BAD_REQUEST
+        ) 
+
+    @action(methods=['post', 'delete'], detail=True,)
+    def shopping_cart(self, request, pk):
+        recipe = get_object_or_404(Recipe, pk=pk)
+        if request.method == 'POST':
+            serializer = ShoppingCartSerializer(
+                data={'user': request.user.id, 'recipe': recipe.id}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            shopping_cart_serializer = CreateResponseSerializer(recipe)
+            return Response(
+                shopping_cart_serializer.data, status=status.HTTP_201_CREATED
+            )
+        shopping_cart = ShoppingCart.objects.filter(
+            user=request.user,
+            recipe=recipe
+        )
+        if shopping_cart:
+            shopping_cart.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'errors': 'Рецепт уже удален из избранного'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    @action(
+        detail=False,
+        methods=['get'],
+        # permission_classes=(permissions.IsAuthenticated,)
+    )
+    def download_shopping_cart(self, request):
+        """Позволяет текущему пользователю закрузить список покупок."""
+        shopping_cart = (
+            IngredientRecipe.objects.filter(
+                recipe__shopping_cart__user=request.user
+            ).values(
+                'ingredient__name',
+                'ingredient__measurement_unit',
+            ).order_by(
+                'ingredient__name'
+            ).annotate(ingredient_amount_sum=Sum('amount'))
+        )
+        return create_pdf_file(shopping_cart)
