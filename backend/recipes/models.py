@@ -1,10 +1,17 @@
 from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
 from django.db import models
+
 from users.models import User
 
 
 class Ingredient(models.Model):
+    """
+    Базовая модель Ingredient.
+
+    Создана для возможности создания рецептов
+    """
+
     name = models.CharField('Ингредиент', max_length=200)
     measurement_unit = models.CharField('Единица измерения', max_length=16)
 
@@ -18,6 +25,11 @@ class Ingredient(models.Model):
 
 
 class Tag(models.Model):
+    """Базовая модель Tag.
+
+    Создана для возможности устанавливать теги на рецепты.
+    """
+
     name = models.CharField(
         'Тег',
         max_length=200)
@@ -42,6 +54,12 @@ class Tag(models.Model):
 
 
 class Recipe(models.Model):
+    """
+    Базовая модель Recipe.
+
+    Создает рецепты.
+    """
+
     name = models.CharField('Рецепт', max_length=200)
     text = models.TextField('Описание', blank=True, null=True)
     author = models.ForeignKey(
@@ -86,6 +104,11 @@ class Recipe(models.Model):
 
 
 class IngredientRecipe(models.Model):
+    """
+    Модель IngredientRecipe.
+
+    Создана для связи ингредиентов и рецептов.
+    """
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
@@ -111,6 +134,11 @@ class IngredientRecipe(models.Model):
 
 
 class Favorite(models.Model):
+    """Модель Favorite.
+
+    Создана для возможности добавлять рецепты в избранное.
+    """
+
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -140,6 +168,12 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
+    """
+    Модель ShoppingCart.
+
+    Создана для возможности добавить ингредиенты по рецептам в список покупок.
+    """
+
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,

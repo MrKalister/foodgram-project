@@ -4,27 +4,30 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser import utils, views
 from djoser.conf import settings
 from djoser.views import UserViewSet
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
 from rest_framework import permissions, status
 from rest_framework.decorators import action
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import (LimitOffsetPagination,
+                                       PageNumberPagination)
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
 from users.models import Follow, User
 
 from .filters import IngredientSearchFilter, RecipeFilter
 from .pdf_downloader import create_pdf_file
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (CreateRecipeSerializer, CreateResponseSerializer,
-                          FavoriteSerializer, TagSerializer,
-                          FollowSerializer, IngredientSerializer,
-                          RecipeSerializer, ShoppingCartSerializer,
-                          SubscriptionShowSerializer, )
+                          FavoriteSerializer, FollowSerializer,
+                          IngredientSerializer, RecipeSerializer,
+                          ShoppingCartSerializer, SubscriptionShowSerializer,
+                          TagSerializer)
 
 
 class CustomTokenCreateView(views.TokenCreateView):
+    """Для получения токена."""
     def _action(self, serializer):
         super()._action(serializer)
         token = utils.login_user(self.request, serializer.user)
@@ -36,6 +39,8 @@ class CustomTokenCreateView(views.TokenCreateView):
 
 
 class TagViewSet(ReadOnlyModelViewSet):
+    """Вьюсет для обьектов класса Tag."""
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
@@ -43,6 +48,8 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
+    """Вьюсет для обьектов класса Ingredient."""
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
@@ -52,6 +59,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 
 class UsersViewSet(UserViewSet):
+    """Вьюсет для подписок, модель Follow."""
     pagination_class = LimitOffsetPagination
 
     @action(methods=['get'], detail=False)
@@ -98,11 +106,13 @@ class UsersViewSet(UserViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
+    """Вьюсет для модели Recipe"""
     queryset = Recipe.objects.all()
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
     )
-    pagination_class = LimitOffsetPagination
+    # pagination_class = LimitOffsetPagination
+    pagination_class = PageNumberPagination
     filterset_class = RecipeFilter
     filter_backends = [DjangoFilterBackend, ]
 

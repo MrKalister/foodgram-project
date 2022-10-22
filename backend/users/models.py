@@ -4,10 +4,10 @@ from django.db import models
 
 
 class User(AbstractUser):
-    """Model User. Adden new fields."""
+    """Модель User. Добавлены новые поля."""
 
     username = models.CharField(
-        'Никнейм',
+        'Имя пользователя',
         max_length=150,
         unique=True,
         db_index=True,
@@ -31,6 +31,8 @@ class User(AbstractUser):
 
 
 class Follow(models.Model):
+    """Модель Follow. Создана для возможности подписаться."""
+    
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
