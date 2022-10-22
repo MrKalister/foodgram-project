@@ -2,22 +2,20 @@ import base64
 
 import webcolors
 from django.core.files.base import ContentFile
-from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from rest_framework.serializers import (Field, ImageField, ModelSerializer,
-                                        PrimaryKeyRelatedField, ReadOnlyField,
-                                        SerializerMethodField,
-                                        ValidationError)
-from rest_framework.validators import UniqueTogetherValidator
-
 from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
                             ShoppingCart, Tag)
+from rest_framework.serializers import (Field, ImageField, ModelSerializer,
+                                        PrimaryKeyRelatedField, ReadOnlyField,
+                                        SerializerMethodField, ValidationError)
+from rest_framework.validators import UniqueTogetherValidator
 from users.models import Follow, User
 
 
 class Hex2NameColor(Field):
     def to_representation(self, value):
         return value
+
     def to_internal_value(self, data):
         try:
             data = webcolors.hex_to_name(data)
@@ -29,8 +27,8 @@ class Hex2NameColor(Field):
 class Base64ImageField(ImageField):
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')  
-            ext = format.split('/')[-1]  
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
         return super().to_internal_value(data)
 
@@ -113,6 +111,7 @@ class RecipeSerializer(ModelSerializer):
             'is_favorited', 'is_in_shopping_cart',
             'name', 'image', 'text', 'cooking_time',
         )
+
     def validate_ingredients(self, ingredients):
 
         ingredients_data = [
@@ -256,13 +255,16 @@ class CreateRecipeSerializer(ModelSerializer):
         recipe.tags.set(tags_data)
         self.add_ingredients(ingredients_data, recipe)
         return recipe
-    
+
     def update(self, instance, validated_data):
         recipe = instance
         instance.image = validated_data.get('image', instance.image)
         instance.name = validated_data.get('name', instance.name)
-        instance.text = validated_data.get('text' , instance.text)
-        instance.cooking_time = validated_data.get('cooking_time', instance.cooking_time)
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get(
+            'cooking_time',
+            instance.cooking_time
+        )
         instance.tags.clear()
         instance.ingredients.clear()
         instance.tags.set(validated_data.get('tags'))
@@ -270,7 +272,7 @@ class CreateRecipeSerializer(ModelSerializer):
         IngredientRecipe.objects.filter(recipe=recipe).delete()
         self.add_ingredients(ingredients_data, recipe)
         instance.save()
-        return instance 
+        return instance
 
     class Meta:
         model = Recipe
@@ -311,12 +313,12 @@ class ShoppingCartSerializer(ModelSerializer):
             )
         ]
 
-'''
-class SubscriptionShowSerializer(CustomUserSerializer):
+
+class SubscriptionShowSerializer(CustumUserSerializer):
     """Сериализатор отображения подписок."""
 
-    recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes = SerializerMethodField()
+    recipes_count = SerializerMethodField()
 
     class Meta:
         model = User
@@ -332,11 +334,12 @@ class SubscriptionShowSerializer(CustomUserSerializer):
         )
 
     def get_recipes(self, object):
-        author_recipes = object.recipes.all()[:RECIPES_LIMIT]
-        return SubscriptionRecipeShortSerializer(
+        recipes_limit = self.context.get('recipes_limit')
+        print(type(recipes_limit))
+        author_recipes = object.recipes.all()[:int(recipes_limit)]
+        return CreateResponseSerializer(
             author_recipes, many=True
         ).data
 
     def get_recipes_count(self, object):
         return object.recipes.count()
-'''

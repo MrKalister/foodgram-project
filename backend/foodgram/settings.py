@@ -1,5 +1,4 @@
 import os
-from datetime import timedelta
 
 from dotenv import load_dotenv
 
@@ -120,10 +119,10 @@ DJOSER = {
         'user_list': ['rest_framework.permissions.AllowAny'],
         # CurrentUserOrAdminOrReadOnly
     },
-    'SERIALIZERS':{
+    'SERIALIZERS': {
         'user_create': 'api.serializers.CustumUserCreateSerializer',
         'user': 'api.serializers.CustumUserSerializer',
-        'current_user': 'api.serializers.CustumUserSerializer',  
+        'current_user': 'api.serializers.CustumUserSerializer',
     }
 }
 
@@ -131,4 +130,4 @@ DJOSER = {
 CORS_URLS_REGEX = r'^/api/.*$'
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-] 
+]

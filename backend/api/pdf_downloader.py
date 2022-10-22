@@ -1,13 +1,12 @@
 import io
 
 from django.http import FileResponse
+from foodgram.settings import FONTS_FILES_DIR
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-
-from foodgram.settings import FONTS_FILES_DIR
 
 
 def create_pdf_file(shopping_cart):
@@ -25,7 +24,6 @@ def create_pdf_file(shopping_cart):
         pdf.drawString(
             10,
             down_param,
-            text=
             f"{number}. {ingredient['ingredient__name']}, "
             f"{ingredient['ingredient_amount_sum']} "
             f"{ingredient['ingredient__measurement_unit']}.",
@@ -38,4 +36,8 @@ def create_pdf_file(shopping_cart):
     pdf.showPage()
     pdf.save()
     buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename='shopping_cart.pdf')
+    return FileResponse(
+        buffer,
+        as_attachment=True,
+        filename='shopping_cart.pdf'
+    )

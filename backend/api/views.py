@@ -1,31 +1,27 @@
-from django.db.models import Sum, Subquery
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.db.models import Sum
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser import utils, views
 from djoser.conf import settings
 from djoser.views import UserViewSet
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
 from rest_framework import permissions, status
 from rest_framework.decorators import action
-from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from django_filters.rest_framework import DjangoFilterBackend
-from .filters import RecipeFilter, IngredientSearchFilter, SubscriptionsFilter
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
 from users.models import Follow, User
-from .permissions import IsAuthorOrReadOnly
 
-
-
+from .filters import IngredientSearchFilter, RecipeFilter
 from .pdf_downloader import create_pdf_file
+from .permissions import IsAuthorOrReadOnly
 from .serializers import (CreateRecipeSerializer, CreateResponseSerializer,
-                          FavoriteSerializer, FollowListSerializer,
-                          FollowSerializer,
-                          IngredientSerializer, RecipeSerializer,
-                          ShoppingCartSerializer, TagSerializer)
+                          FavoriteSerializer, TagSerializer,
+                          FollowSerializer, IngredientSerializer,
+                          RecipeSerializer, ShoppingCartSerializer,
+                          SubscriptionShowSerializer, )
 
 
 class CustomTokenCreateView(views.TokenCreateView):
@@ -34,7 +30,8 @@ class CustomTokenCreateView(views.TokenCreateView):
         token = utils.login_user(self.request, serializer.user)
         token_serializer_class = settings.SERIALIZERS.token
         return Response(
-            data=token_serializer_class(token).data, status=status.HTTP_201_CREATED
+            data=token_serializer_class(token).data,
+            status=status.HTTP_201_CREATED
         )
 
 
@@ -56,18 +53,21 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 class UsersViewSet(UserViewSet):
     pagination_class = LimitOffsetPagination
-    # filterset_class = SubscriptionsFilter
-    # filter_backends = [DjangoFilterBackend,]
 
     @action(methods=['get'], detail=False)
     def subscriptions(self, request):
-        subscriptions_list = self.paginate_queryset(
-                User.objects.filter(following__user=request.user)
-            )
-        serializer = FollowListSerializer(
-            subscriptions_list, many=True, context={
-                'request': request
-            }
+        recipes_limit = request.query_params['recipes_limit']
+        authors = User.objects.filter(following__user=request.user)
+        result_pages = self.paginate_queryset(
+            queryset=authors
+        )
+        serializer = SubscriptionShowSerializer(
+            result_pages,
+            context={
+                'request': request,
+                'recipes_limit': recipes_limit
+            },
+            many=True
         )
         return self.get_paginated_response(serializer.data)
 
@@ -104,13 +104,12 @@ class RecipeViewSet(ModelViewSet):
     )
     pagination_class = LimitOffsetPagination
     filterset_class = RecipeFilter
-    filter_backends = [DjangoFilterBackend,]
+    filter_backends = [DjangoFilterBackend, ]
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
             return RecipeSerializer
         return CreateRecipeSerializer
-
 
     @staticmethod
     def post_method_for_actions(request, pk, serializers):
@@ -119,7 +118,6 @@ class RecipeViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
     @action(methods=['post', 'delete'], detail=True)
     def favorite(self, request, pk):
@@ -144,7 +142,7 @@ class RecipeViewSet(ModelViewSet):
         return Response(
             {'errors': 'Рецепт уже удален из избранного'},
             status=status.HTTP_400_BAD_REQUEST
-        ) 
+        )
 
     @action(methods=['post', 'delete'], detail=True,)
     def shopping_cart(self, request, pk):

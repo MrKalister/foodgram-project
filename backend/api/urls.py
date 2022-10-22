@@ -14,6 +14,8 @@ v1_router.register('tags', TagViewSet, basename='tags')
 urlpatterns = [
     path('', include(v1_router.urls)),
     path('', include('djoser.urls')),
-    re_path(r"^auth/token/login/?$", CustomTokenCreateView.as_view(), name="login"),
+    re_path(r"^auth/token/login/?$",
+            CustomTokenCreateView.as_view(),
+            name="login"),
     path('auth/', include('djoser.urls.authtoken')),
 ]

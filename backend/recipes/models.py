@@ -1,7 +1,6 @@
 from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
 from django.db import models
-
 from users.models import User
 
 
@@ -31,7 +30,7 @@ class Tag(models.Model):
             message='Слаг содержит недопустимый символ',
         )]
     )
-    color = models.CharField('Цвет',max_length=7)
+    color = models.CharField('Цвет', max_length=7)
 
     class Meta:
         ordering = ('id',)
@@ -53,7 +52,7 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         'Изображение',
-        upload_to='recipes/images/', 
+        upload_to='recipes/images/',
     )
     cooking_time = models.PositiveIntegerField(
         verbose_name='Время приготовления',
@@ -64,12 +63,12 @@ class Recipe(models.Model):
         Ingredient,
         through='IngredientRecipe',
         related_name='recipes',
-        verbose_name = 'Ингредиенты'
+        verbose_name='Ингредиенты'
     )
     tags = models.ManyToManyField(
         Tag,
         related_name='recipes',
-        verbose_name = 'Теги'
+        verbose_name='Теги'
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
@@ -90,17 +89,17 @@ class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        verbose_name = 'Ингредиент'
+        verbose_name='Ингредиент'
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        verbose_name = 'Рецепт'
+        verbose_name='Рецепт'
     )
     amount = models.PositiveIntegerField(
         verbose_name='Количество',
         default=1,
-        validators=[MinValueValidator(1),])
+        validators=[MinValueValidator(1), ])
 
     class Meta:
         verbose_name = 'Ингредиент в рецепте'
