@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework',
     'django_filters',
+    'corsheaders',
     'djoser',
     'recipes',
     'users',
@@ -101,8 +102,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # REST FRAMEWORK settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-        # 'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        # 'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -115,9 +116,21 @@ REST_FRAMEWORK = {
 }
 
 DJOSER = {
+    'HIDE_USERS': False,
+    'LOGIN_FIELD': 'email',
+    'PERMISSIONS': {
+        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+        'user_list': ['rest_framework.permissions.AllowAny'],
+    },
     'SERIALIZERS':{
         'user_create': 'api.serializers.CustumUserCreateSerializer',
         'user': 'api.serializers.CustumUserSerializer',
         'current_user': 'api.serializers.CustumUserSerializer',  
     }
 }
+
+# настройки для CORSa:
+CORS_URLS_REGEX = r'^/api/.*$'
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+] 

@@ -1,20 +1,17 @@
 import base64
-import webcolors
 
-from rest_framework.validators import UniqueTogetherValidator
+import webcolors
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from rest_framework.relations import SlugRelatedField
-from rest_framework.serializers import (ModelSerializer,
-                                        PrimaryKeyRelatedField,
+from rest_framework.serializers import (Field, ImageField, ModelSerializer,
+                                        PrimaryKeyRelatedField, ReadOnlyField,
                                         SerializerMethodField,
-                                        SlugRelatedField, ValidationError,
-                                        ImageField, Field, ReadOnlyField, 
-                                        IntegerField, BooleanField)
-                                        
+                                        ValidationError)
+from rest_framework.validators import UniqueTogetherValidator
 
-from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag, Favorite, ShoppingCart
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
 from users.models import Follow, User
 
 
@@ -77,62 +74,6 @@ class TagSerializer(ModelSerializer):
         )
 
 
-class FollowListSerializer(CustumUserSerializer):
-    recipes = SerializerMethodField()
-    recipes_count = SerializerMethodField()
-    is_subscribed = SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = User
-        fields = (
-            'email', 'id', 'username', 'first_name', 'last_name',
-            'is_subscribed', 'recipes', 'recipes_count'
-        )
-    def get_recipes(self, obj):
-        return obj.recipes.all()
-
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
-
-
-class FollowSerializer(ModelSerializer):
-    user = SlugRelatedField(
-        slug_field='username',
-        read_only=True,
-        default=UserSerializer()
-    )
-    following = SlugRelatedField(
-        slug_field='username',
-        queryset=User.objects.all()
-    )
-
-    def validate_following(self, following):
-        user = self.context.get('request').user
-        if user == following:
-            raise ValidationError(
-                'It is impossible to follow yourself'
-            )
-        return following
-
-    class Meta:
-        model = Follow
-        fields = ('user', 'following')
-
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Follow.objects.all(),
-                fields=('user', 'following'),
-                message='You are already following'
-            )
-        ]
-
-    def to_representation(self, instance):
-        return FollowListSerializer(
-            instance.following,
-            context={'request': self.context.get('request')}
-        ).data
-
-
 class IngredientSerializer(ModelSerializer):
 
     class Meta:
@@ -189,6 +130,57 @@ class RecipeSerializer(ModelSerializer):
         if request is None or request.user.is_anonymous:
             return False
         return request.user.shopping_cart.filter(recipe=object).exists()
+
+
+class CreateResponseSerializer(ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class FollowListSerializer(CustumUserSerializer):
+    recipes = CreateResponseSerializer(many=True, read_only=True)
+    recipes_count = SerializerMethodField()
+    is_subscribed = SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'email', 'id', 'username', 'first_name', 'last_name',
+            'is_subscribed', 'recipes', 'recipes_count'
+        )
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
+
+
+class FollowSerializer(ModelSerializer):
+
+    def validate_following(self, following):
+        user = self.context.get('request').user
+        if user == following:
+            raise ValidationError(
+                'It is impossible to follow yourself'
+            )
+        return following
+
+    class Meta:
+        model = Follow
+        fields = ('user', 'following')
+
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=('user', 'following'),
+                message='You are already following'
+            )
+        ]
+
+    def to_representation(self, instance):
+        return FollowListSerializer(
+            instance.following,
+            context={'request': self.context.get('request')}
+        ).data
 
 
 class CreateIngredientRecipeSerializer(ModelSerializer):
@@ -278,12 +270,6 @@ class CreateRecipeSerializer(ModelSerializer):
         )
 
 
-class CreateResponseSerializer(ModelSerializer):
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
-
-
 class FavoriteSerializer(ModelSerializer):
     class Meta:
         model = Favorite
@@ -310,3 +296,33 @@ class ShoppingCartSerializer(ModelSerializer):
                 message='Вы уже добавляли это рецепт в список покупок'
             )
         ]
+
+'''
+class SubscriptionShowSerializer(CustomUserSerializer):
+    """Сериализатор отображения подписок."""
+
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count'
+        )
+
+    def get_recipes(self, object):
+        author_recipes = object.recipes.all()[:RECIPES_LIMIT]
+        return SubscriptionRecipeShortSerializer(
+            author_recipes, many=True
+        ).data
+
+    def get_recipes_count(self, object):
+        return object.recipes.count()
+'''

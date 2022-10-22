@@ -1,23 +1,29 @@
+from django.db.models import Sum, Subquery
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from djoser import utils, views
 from djoser.conf import settings
 from djoser.views import UserViewSet
-from rest_framework import status
-from django.db.models import Sum
+from rest_framework import permissions, status
 from rest_framework.decorators import action
-from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
+from rest_framework.filters import SearchFilter
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import RecipeFilter, SubscriptionsFilter
 
-from recipes.models import Ingredient, Recipe, Tag, Favorite, ShoppingCart, IngredientRecipe
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
 from users.models import Follow, User
+
 from .pdf_downloader import create_pdf_file
-from .serializers import (CreateRecipeSerializer, FavoriteSerializer, FollowListSerializer,
-                          FollowSerializer, GetIngredientRecipeSerializer,
+from .serializers import (CreateRecipeSerializer, CreateResponseSerializer,
+                          FavoriteSerializer, FollowListSerializer,
+                          FollowSerializer,
                           IngredientSerializer, RecipeSerializer,
-                          TagSerializer, CreateResponseSerializer,
-                          ShoppingCartSerializer)
+                          ShoppingCartSerializer, TagSerializer)
 
 
 class CustomTokenCreateView(views.TokenCreateView):
@@ -40,15 +46,27 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
+    filter_backends = (SearchFilter, )
+    search_fields = ('name',)
 
 
 class UsersViewSet(UserViewSet):
+    pagination_class = LimitOffsetPagination
+    filterset_class = SubscriptionsFilter
+    filter_backends = [DjangoFilterBackend,]
 
     @action(methods=['get'], detail=False)
     def subscriptions(self, request):
-        subscriptions_list = self.paginate_queryset(
-            User.objects.filter(following__user=request.user)
+        recipes_limit = request.query_params['recipes_limit']
+        if recipes_limit:
+            authors = User.objects.filter(following__user=request.user)
+            subscriptions_list = self.paginate_queryset(
+                authors[0].recipes.all()[:recipes_limit]
         )
+        else:
+            subscriptions_list = self.paginate_queryset(
+                User.objects.filter(following__user=request.user)
+            )
         serializer = FollowListSerializer(
             subscriptions_list, many=True, context={
                 'request': request
@@ -81,6 +99,11 @@ class UsersViewSet(UserViewSet):
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
+    # permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    pagination_class = LimitOffsetPagination
+    filterset_class = RecipeFilter
+    filter_backends = [DjangoFilterBackend,]
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
@@ -150,7 +173,7 @@ class RecipeViewSet(ModelViewSet):
     @action(
         detail=False,
         methods=['get'],
-        # permission_classes=(permissions.IsAuthenticated,)
+        permission_classes=(permissions.IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
         """Позволяет текущему пользователю закрузить список покупок."""
