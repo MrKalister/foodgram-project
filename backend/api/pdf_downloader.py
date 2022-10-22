@@ -18,17 +18,23 @@ def create_pdf_file(shopping_cart):
     pdf = canvas.Canvas(buffer, pagesize=letter, bottomup=0)
     pdf.translate(cm, cm)
     pdf.setFont('Helvetica', 22)
-    pdf.drawString(200, 0, 'Список покупок:')
+    pdf.drawString(200, 5, 'Список покупок:')
     pdf.setFont('Helvetica', 16)
+    down_param = 20
     for number, ingredient in enumerate(shopping_cart, start=1):
         pdf.drawString(
-            15,
-            25,
+            10,
+            down_param,
             text=
             f"{number}. {ingredient['ingredient__name']}, "
             f"{ingredient['ingredient_amount_sum']} "
             f"{ingredient['ingredient__measurement_unit']}.",
         )
+        down_param += 20
+        if down_param >= 780:
+            down_param = 20
+            pdf.showPage()
+            pdf.setFont('Helvetica', 16)
     pdf.showPage()
     pdf.save()
     buffer.seek(0)

@@ -12,11 +12,13 @@ from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
-from .filters import RecipeFilter, SubscriptionsFilter
-
+from .filters import RecipeFilter, IngredientSearchFilter, SubscriptionsFilter
 from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
                             ShoppingCart, Tag)
 from users.models import Follow, User
+from .permissions import IsAuthorOrReadOnly
+
+
 
 from .pdf_downloader import create_pdf_file
 from .serializers import (CreateRecipeSerializer, CreateResponseSerializer,
@@ -40,31 +42,26 @@ class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
+    permission_classes = (permissions.AllowAny,)
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = (SearchFilter, )
-    search_fields = ('name',)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientSearchFilter
+    permission_classes = (permissions.AllowAny,)
 
 
 class UsersViewSet(UserViewSet):
     pagination_class = LimitOffsetPagination
-    filterset_class = SubscriptionsFilter
-    filter_backends = [DjangoFilterBackend,]
+    # filterset_class = SubscriptionsFilter
+    # filter_backends = [DjangoFilterBackend,]
 
     @action(methods=['get'], detail=False)
     def subscriptions(self, request):
-        recipes_limit = request.query_params['recipes_limit']
-        if recipes_limit:
-            authors = User.objects.filter(following__user=request.user)
-            subscriptions_list = self.paginate_queryset(
-                authors[0].recipes.all()[:recipes_limit]
-        )
-        else:
-            subscriptions_list = self.paginate_queryset(
+        subscriptions_list = self.paginate_queryset(
                 User.objects.filter(following__user=request.user)
             )
         serializer = FollowListSerializer(
@@ -77,14 +74,17 @@ class UsersViewSet(UserViewSet):
     @action(methods=['post', 'delete'], detail=True)
     def subscribe(self, request, id):
         if request.method != 'POST':
-            # Добавить обработку ошибки 400, если не был подписан
-            subscription = get_object_or_404(
-                Follow,
-                following=get_object_or_404(User, id=id),
-                user=request.user
+            subscription = Follow.objects.filter(
+                user=request.user,
+                following=get_object_or_404(User, id=id)
             )
-            self.perform_destroy(subscription)
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            if subscription:
+                self.perform_destroy(subscription)
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {'errors': 'Вы уже отписались или не были подписаны'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         serializer = FollowSerializer(
             data={
                 'user': request.user.id,
@@ -99,8 +99,9 @@ class UsersViewSet(UserViewSet):
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
-    # permission_classes = (permissions.AllowAny,)
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
+    )
     pagination_class = LimitOffsetPagination
     filterset_class = RecipeFilter
     filter_backends = [DjangoFilterBackend,]
@@ -120,7 +121,7 @@ class RecipeViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-    @action(methods=['post', 'delete'], detail=True,)
+    @action(methods=['post', 'delete'], detail=True)
     def favorite(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         if request.method == 'POST':
@@ -141,7 +142,7 @@ class RecipeViewSet(ModelViewSet):
             favorite_recipe.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
-            {'errors': 'Рецепт уже удален из списка покупок'},
+            {'errors': 'Рецепт уже удален из избранного'},
             status=status.HTTP_400_BAD_REQUEST
         ) 
 

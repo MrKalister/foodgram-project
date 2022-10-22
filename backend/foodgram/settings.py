@@ -95,14 +95,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 CSV_FILES_DIR = os.path.join(BASE_DIR, '..', 'data')
 FONTS_FILES_DIR = os.path.join(CSV_FILES_DIR, 'HelveticaRegular.ttf')
 
-
-
 # E-mail settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # REST FRAMEWORK settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        # 'rest_framework.permissions.AllowAny',
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
 
@@ -119,8 +116,9 @@ DJOSER = {
     'HIDE_USERS': False,
     'LOGIN_FIELD': 'email',
     'PERMISSIONS': {
-        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+        'user': ['rest_framework.permissions.IsAuthenticated'],
         'user_list': ['rest_framework.permissions.AllowAny'],
+        # CurrentUserOrAdminOrReadOnly
     },
     'SERIALIZERS':{
         'user_create': 'api.serializers.CustumUserCreateSerializer',

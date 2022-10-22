@@ -51,4 +51,13 @@ class SubscriptionsFilter(FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ['recipes_limit',] 
+        fields = ['recipes_limit',]
+
+
+class IngredientSearchFilter(filters.FilterSet):
+    """Фильтр поиска по названию ингредиента."""
+    name = filters.CharFilter(lookup_expr='istartswith')
+
+    class Meta:
+        model = Ingredient
+        fields = ('name', )

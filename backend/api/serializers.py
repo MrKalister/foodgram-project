@@ -113,7 +113,21 @@ class RecipeSerializer(ModelSerializer):
             'is_favorited', 'is_in_shopping_cart',
             'name', 'image', 'text', 'cooking_time',
         )
+    def validate_ingredients(self, ingredients):
 
+        ingredients_data = [
+            ingredient.get('id') for ingredient in ingredients
+        ]
+        if len(ingredients_data) != len(set(ingredients_data)):
+            raise ValidationError(
+                'Ингредиенты рецепта не должны повторяться!'
+            )
+        for ingredient in ingredients:
+            if int(ingredient.get('amount')) < 1:
+                raise ValidationError(
+                    'Убедитесь, что это значение больше либо равно 1.'
+                )
+        return ingredients
 
     def get_ingredients(self, obj):
         ingredients = IngredientRecipe.objects.filter(recipe=obj)
