@@ -137,3 +137,6 @@ new_export.py
 # node модули
 node_modules/
 build/
+
+# .vscode
+.vscode
