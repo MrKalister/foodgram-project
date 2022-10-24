@@ -1,7 +1,6 @@
 from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
 from django.db import models
-
 from users.models import User
 
 
@@ -128,6 +127,12 @@ class IngredientRecipe(models.Model):
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецепте'
         ordering = ('id',)
+        constraints = (
+            models.UniqueConstraint(
+                fields=['ingredient', 'recipe'],
+                name='unique_ingredient_recipe'
+            ),
+        )
 
     def __str__(self):
         return f'{self.recipe} содержит ингредиент/ты {self.ingredient}'

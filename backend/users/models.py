@@ -32,7 +32,7 @@ class User(AbstractUser):
 
 class Follow(models.Model):
     """Модель Follow. Создана для возможности подписаться."""
-    
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

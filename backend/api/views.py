@@ -4,6 +4,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser import utils, views
 from djoser.conf import settings
 from djoser.views import UserViewSet
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.pagination import (LimitOffsetPagination,
@@ -11,11 +13,7 @@ from rest_framework.pagination import (LimitOffsetPagination,
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
 from users.models import Follow, User
-
 from .filters import IngredientSearchFilter, RecipeFilter
 from .pdf_downloader import create_pdf_file
 from .permissions import IsAuthorOrReadOnly
@@ -86,7 +84,7 @@ class UsersViewSet(UserViewSet):
                 user=request.user,
                 following=get_object_or_404(User, id=id)
             )
-            if subscription:
+            if subscription.exists():
                 self.perform_destroy(subscription)
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response(
@@ -111,7 +109,6 @@ class RecipeViewSet(ModelViewSet):
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
     )
-    # pagination_class = LimitOffsetPagination
     pagination_class = PageNumberPagination
     filterset_class = RecipeFilter
     filter_backends = [DjangoFilterBackend, ]
@@ -122,62 +119,45 @@ class RecipeViewSet(ModelViewSet):
         return CreateRecipeSerializer
 
     @staticmethod
-    def post_method_for_actions(request, pk, serializers):
+    def post_method_for_actions(request, pk, serializer_req):
+        recipe = get_object_or_404(Recipe, pk=pk)
         data = {'user': request.user.id, 'recipe': pk}
-        serializer = serializers(data=data, context={'request': request})
+        serializer = serializer_req(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer_data = CreateResponseSerializer(recipe)
+        return Response(serializer_data.data, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def delete_method_for_actions(request, pk, error, model):
+        recipe = get_object_or_404(Recipe, pk=pk)
+        obj = model.objects.filter(
+            user=request.user,
+            recipe=recipe
+        )
+        if obj.exists():
+            obj.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'errors': f'Рецепт уже удален из {error}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     @action(methods=['post', 'delete'], detail=True)
     def favorite(self, request, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
         if request.method == 'POST':
-            serializer = FavoriteSerializer(
-                data={'user': request.user.id, 'recipe': pk}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            favorite_serializer = CreateResponseSerializer(recipe)
-            return Response(
-                favorite_serializer.data, status=status.HTTP_201_CREATED
-            )
-        favorite_recipe = Favorite.objects.filter(
-            user=request.user,
-            recipe=recipe
-        )
-        if favorite_recipe:
-            favorite_recipe.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'errors': 'Рецепт уже удален из избранного'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+            return self.post_method_for_actions(request, pk,
+                                                FavoriteSerializer)
+        return self.delete_method_for_actions(request, pk,
+                                              'избранного', Favorite)
 
     @action(methods=['post', 'delete'], detail=True,)
     def shopping_cart(self, request, pk):
-        recipe = get_object_or_404(Recipe, pk=pk)
         if request.method == 'POST':
-            serializer = ShoppingCartSerializer(
-                data={'user': request.user.id, 'recipe': recipe.id}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            shopping_cart_serializer = CreateResponseSerializer(recipe)
-            return Response(
-                shopping_cart_serializer.data, status=status.HTTP_201_CREATED
-            )
-        shopping_cart = ShoppingCart.objects.filter(
-            user=request.user,
-            recipe=recipe
-        )
-        if shopping_cart:
-            shopping_cart.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'errors': 'Рецепт уже удален из избранного'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+            return self.post_method_for_actions(request, pk,
+                                                ShoppingCartSerializer)
+        return self.delete_method_for_actions(request, pk,
+                                              'списка покупок', ShoppingCart)
 
     @action(
         detail=False,
