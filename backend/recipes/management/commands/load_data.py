@@ -16,8 +16,8 @@ class Command(BaseCommand):
                 data = json.load(file)
                 ingredients = [
                     Ingredient(
-                        name=item['name'],
-                        measurement_unit=item['measurement_unit'],
+                        name=item.get('name'),
+                        measurement_unit=item.get('measurement_unit'),
                     )
                     for item in data
                 ]

@@ -104,7 +104,8 @@ class UsersViewSet(UserViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    """Вьюсет для модели Recipe"""
+    """Вьюсет для модели Recipe."""
+
     queryset = Recipe.objects.all()
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
@@ -120,6 +121,7 @@ class RecipeViewSet(ModelViewSet):
 
     @staticmethod
     def post_method_for_actions(request, pk, serializer_req):
+        """Для post запросов к shopping_cart и favorite."""
         recipe = get_object_or_404(Recipe, pk=pk)
         data = {'user': request.user.id, 'recipe': pk}
         serializer = serializer_req(data=data, context={'request': request})
@@ -130,6 +132,7 @@ class RecipeViewSet(ModelViewSet):
 
     @staticmethod
     def delete_method_for_actions(request, pk, error, model):
+        """Для delete запросов к shopping_cart и favorite."""
         recipe = get_object_or_404(Recipe, pk=pk)
         obj = model.objects.filter(
             user=request.user,
@@ -145,6 +148,7 @@ class RecipeViewSet(ModelViewSet):
 
     @action(methods=['post', 'delete'], detail=True)
     def favorite(self, request, pk):
+        """Метод для добавления и удаления рецепта в favorite."""
         if request.method == 'POST':
             return self.post_method_for_actions(request, pk,
                                                 FavoriteSerializer)
@@ -153,6 +157,7 @@ class RecipeViewSet(ModelViewSet):
 
     @action(methods=['post', 'delete'], detail=True,)
     def shopping_cart(self, request, pk):
+        """Метод для добавления и удаления рецепта в shopping_cart."""
         if request.method == 'POST':
             return self.post_method_for_actions(request, pk,
                                                 ShoppingCartSerializer)
