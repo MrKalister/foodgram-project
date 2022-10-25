@@ -1,6 +1,7 @@
 from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
 from django.db import models
+
 from users.models import User
 
 
@@ -123,7 +124,7 @@ class IngredientRecipe(models.Model):
     amount = models.PositiveIntegerField(
         verbose_name='Количество',
         default=1,
-        validators=[MinValueValidator(1),])
+        validators=[MinValueValidator(1), ])
 
     class Meta:
         verbose_name = 'Ингредиент в рецепте'

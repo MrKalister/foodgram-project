@@ -5,9 +5,9 @@ from rest_framework.serializers import (ModelSerializer,
                                         PrimaryKeyRelatedField, ReadOnlyField,
                                         SerializerMethodField, ValidationError)
 from rest_framework.validators import UniqueTogetherValidator
-from users.models import Follow, User
 
 from .fields import Base64ImageField, Hex2NameColor
+from users.models import Follow, User
 
 
 class CustomUserSerializer(UserSerializer):
@@ -282,7 +282,6 @@ class CreateRecipeSerializer(ModelSerializer):
         instance.tags.set(tags)
         IngredientRecipe.objects.filter(recipe=recipe).delete()
         self.add_ingredients(ingredients, recipe)
-        instance.save()
         return instance
 
     class Meta:
