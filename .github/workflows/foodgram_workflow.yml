@@ -67,7 +67,6 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
             docker-compose down -v 
             docker-compose rm backend
-            docker-compose rm frontend
             docker system prune -f
             echo DB_ENGINE=${{ secrets.DB_ENGINE }} > .env
             echo DB_NAME=${{ secrets.DB_NAME }} >> .env
