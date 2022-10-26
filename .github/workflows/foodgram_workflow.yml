@@ -1,0 +1,81 @@
+name: ci/cd_foodgram workflow
+
+on: [push]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pep8-naming flake8-broken-line flake8-return flake8-isort
+          pip install -r backend/requirements.txt
+      - name: Test with flake8
+        run: python -m flake8
+
+  build_image_and_push_to_docker_hub:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    needs: tests
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - name: Check out the repo
+      uses: actions/checkout@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Login to Docker 
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }} 
+    - name: Push to Docker Hub
+      uses: docker/build-push-action@v3 
+      with:
+        context: backend/
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build_image_and_push_to_docker_hub
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - name: executing remote ssh commands to deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.PASSPHRASE }}
+        script: |
+            sudo usermod -aG docker ${{ secrets.USER }}
+            docker pull ${{ secrets.DOCKER_USERNAME }}/infra:latest
+            docker-compose down -v 
+            docker-compose rm web
+            docker system prune -f
+            echo DB_ENGINE=${{ secrets.DB_ENGINE }} > .env
+            echo DB_NAME=${{ secrets.DB_NAME }} >> .env
+            echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
+            echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
+            echo DB_HOST=${{ secrets.DB_HOST }} >> .env
+            echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+            echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
+            docker-compose up -d
+  send_message:
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - name: send message
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: ${{ github.workflow }} успешно выполнен! 

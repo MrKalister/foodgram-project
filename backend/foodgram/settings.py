@@ -6,8 +6,8 @@ load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.getenv('SECRET_KEY', 'the-best-secret-key')
-DEBUG = True
-ALLOWED_HOSTS = ['*']
+DEBUG = False
+ALLOWED_HOSTS = ['51.250.69.50', '127.0.0.1', 'localhost']
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -52,13 +52,25 @@ TEMPLATES = [
 ]
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 # Database SQLite
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
+# DATABASES = {
+#     'default': {
+#         'ENGINE': os.getenv('SQLITE_ENGINE'),
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
+
+# Database postgresql
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('SQLITE_ENGINE'),
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': os.getenv('DB_ENGINE'),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT')
     }
 }
+
 # Users model
 AUTH_USER_MODEL = 'users.User'
 # Password validation
@@ -91,8 +103,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-CSV_FILES_DIR = os.path.join(BASE_DIR, '..', 'data')
-FONTS_FILES_DIR = os.path.join(CSV_FILES_DIR, 'HelveticaRegular.ttf')
+DATA_FILES_DIR = os.path.join(BASE_DIR, '..', 'data')
+FONTS_FILES_DIR = os.path.join(DATA_FILES_DIR, 'HelveticaRegular.ttf')
 
 # E-mail settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

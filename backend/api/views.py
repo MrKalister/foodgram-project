@@ -6,8 +6,10 @@ from djoser.conf import settings
 from djoser.views import UserViewSet
 from rest_framework import permissions, status
 from rest_framework.decorators import action
-from rest_framework.pagination import (LimitOffsetPagination,
-                                       PageNumberPagination)
+from rest_framework.pagination import (
+    LimitOffsetPagination,
+    PageNumberPagination
+)
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
@@ -15,13 +17,25 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from .filters import IngredientSearchFilter, RecipeFilter
 from .pdf_downloader import create_pdf_file
 from .permissions import IsAuthorOrReadOnly
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
-from .serializers import (CreateRecipeSerializer, CreateResponseSerializer,
-                          FavoriteSerializer, FollowSerializer,
-                          IngredientSerializer, RecipeSerializer,
-                          ShoppingCartSerializer, SubscriptionShowSerializer,
-                          TagSerializer)
+from .serializers import (
+    CreateRecipeSerializer,
+    CreateResponseSerializer,
+    FavoriteSerializer,
+    FollowSerializer,
+    IngredientSerializer,
+    RecipeSerializer,
+    ShoppingCartSerializer,
+    SubscriptionShowSerializer,
+    TagSerializer
+)
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    IngredientRecipe,
+    Recipe,
+    ShoppingCart,
+    Tag
+)
 from users.models import Follow, User
 
 

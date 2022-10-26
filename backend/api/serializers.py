@@ -1,12 +1,22 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
-from rest_framework.serializers import (ModelSerializer,
-                                        PrimaryKeyRelatedField, ReadOnlyField,
-                                        SerializerMethodField, ValidationError)
+from rest_framework.serializers import (
+    ModelSerializer,
+    PrimaryKeyRelatedField,
+    ReadOnlyField,
+    SerializerMethodField,
+    ValidationError
+)
 from rest_framework.validators import UniqueTogetherValidator
 
 from .fields import Base64ImageField, Hex2NameColor
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    IngredientRecipe,
+    Recipe,
+    ShoppingCart,
+    Tag
+)
 from users.models import Follow, User
 
 
