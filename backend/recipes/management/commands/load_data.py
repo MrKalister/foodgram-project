@@ -12,7 +12,8 @@ class Command(BaseCommand):
     """Загрузчик в БД из JSON файла."""
 
     def handle(self, *args, **options):
-        json_path = os.path.join(DATA_FILES_DIR, 'ingredients.json')
+        file_name = 'ingredients.json'
+        json_path = os.path.join(DATA_FILES_DIR, file_name)
         try:
             with open(json_path, 'rb') as file:
                 data = json.load(file)
@@ -26,5 +27,6 @@ class Command(BaseCommand):
                 Ingredient.objects.bulk_create(ingredients)
             print('finished')
         except FileNotFoundError:
-            print(f'Файл \'ingredients.json\' не найден.')
+
+            print(f'Файл {file_name} не найден.')
             return

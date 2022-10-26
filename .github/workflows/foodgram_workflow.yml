@@ -36,12 +36,19 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }} 
-    - name: Push to Docker Hub
+    - name: Push to Docker Hub backend
       uses: docker/build-push-action@v3 
       with:
-        context: backend/
+        context: ./backend/
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
+    - name: Push to Docker Hub frontend
+      uses: docker/build-push-action@v3
+      with:
+        context: ./frontend/
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
+
   deploy:
     runs-on: ubuntu-latest
     needs: build_image_and_push_to_docker_hub
@@ -56,9 +63,11 @@ jobs:
         passphrase: ${{ secrets.PASSPHRASE }}
         script: |
             sudo usermod -aG docker ${{ secrets.USER }}
-            docker pull ${{ secrets.DOCKER_USERNAME }}/infra:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
             docker-compose down -v 
-            docker-compose rm web
+            docker-compose rm backend
+            docker-compose rm frontend
             docker system prune -f
             echo DB_ENGINE=${{ secrets.DB_ENGINE }} > .env
             echo DB_NAME=${{ secrets.DB_NAME }} >> .env

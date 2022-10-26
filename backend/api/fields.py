@@ -11,10 +11,9 @@ class Hex2NameColor(Field):
 
     def to_internal_value(self, data):
         try:
-            data = webcolors.hex_to_name(data)
+            return webcolors.hex_to_name(data)
         except ValueError:
             raise ValidationError('Для этого цвета нет имени')
-        return data
 
 
 class Base64ImageField(ImageField):
