@@ -1,39 +1,19 @@
 from django.contrib import admin
 
-from .models import Ingredient, IngredientRecipe, Recipe, Tag
-from users.models import User
+from .models import (
+    Favorite,
+    Ingredient,
+    IngredientRecipe,
+    Recipe,
+    ShoppingCart,
+    Tag
+)
 
 
-class IngredientRecipeInline(admin.TabularInline):
-    model = IngredientRecipe
-    extra = 1
-    verbose_name = 'Ингредиент'
-
-
-class UserAdmin(admin.ModelAdmin):
-    list_display = (
-        'pk',
-        'username',
-        'email',
-        'first_name',
-        'last_name',
-    )
-    search_fields = ('username', 'email',)
-    list_filter = ('username', 'email',)
-    empty_value_display = '-пусто-'
-
-
-class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'name', 'author',)
-    search_fields = ('author__username', 'name', 'tags__name',)
-    list_filter = ('author__username', 'name', 'tags__name',)
-    empty_value_display = '-пусто-'
-    inlines = [
-        IngredientRecipeInline,
-    ]
-
-
+@admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
+    """Класс админ-панели, отвечающий за ингредиенты."""
+
     list_display = (
         'pk',
         'name',
@@ -41,10 +21,70 @@ class IngredientAdmin(admin.ModelAdmin):
     )
     search_fields = ('name', )
     list_filter = ('name', )
-    empty_value_display = '-пусто-'
 
 
-admin.site.register(User, UserAdmin)
-admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(Ingredient, IngredientAdmin)
-admin.site.register(Tag)
+class IngredientRecipeInline(admin.TabularInline):
+    """Класс админ-панели, позволяющий добавлять ингредиенты в рецепт."""
+
+    model = IngredientRecipe
+    extra = 1
+    verbose_name = 'Ингредиент'
+
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    """Класс админ-панели, отвечающий за теги."""
+
+    list_display = (
+        'pk',
+        'name',
+        'color',
+        'slug'
+    )
+    list_filter = ('name', 'color', 'slug')
+    search_fields = ('name', 'color', 'slug')
+
+
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    """Класс админ-панели, отвечающий за рецепты."""
+
+    list_display = ('pk', 'name', 'author', 'count_favorite',)
+    search_fields = ('author', 'name',)
+    list_filter = ('author', 'name', 'tags',)
+    inlines = [
+        IngredientRecipeInline,
+    ]
+
+    def favorite_count(self, obj):
+        """Выводит общее число добавлений этого рецепта в избранное."""
+        return obj.favorit_recipe.count()
+
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    """Класс админ-панели, отвечающий за избранное."""
+
+    list_display = (
+        'pk',
+        'user',
+        'recipe',
+    )
+    list_filter = ('user', 'recipe', )
+    search_fields = ('user', 'recipe', )
+
+
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(admin.ModelAdmin):
+    """Класс админ-панели, отвечающий за список покупок."""
+
+    list_display = (
+        'pk',
+        'user',
+        'recipe',
+    )
+    list_filter = ('user', 'recipe', )
+    search_fields = ('user', 'recipe', )
+
+
+admin.sites.AdminSite.empty_value_display = '-пусто-'
