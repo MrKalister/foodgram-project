@@ -49,7 +49,7 @@ class TagAdmin(admin.ModelAdmin):
 class RecipeAdmin(admin.ModelAdmin):
     """Класс админ-панели, отвечающий за рецепты."""
 
-    list_display = ('pk', 'name', 'author', 'count_favorite',)
+    list_display = ('pk', 'name', 'author', 'favorite_count',)
     search_fields = ('author', 'name',)
     list_filter = ('author', 'name', 'tags',)
     inlines = [

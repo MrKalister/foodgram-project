@@ -13,12 +13,9 @@ class UserAdmin(admin.ModelAdmin):
         'email',
         'first_name',
         'last_name',
-        'password',
-        'is_admin'
     )
     search_fields = ('username', 'email',)
     list_filter = ('username', 'email',)
-    empty_value_display = '-пусто-'
 
 
 @admin.register(Follow)
@@ -28,7 +25,6 @@ class FollowAdmin(admin.ModelAdmin):
     list_display = ('pk', 'user', 'following',)
     search_fields = ('user', 'following',)
     list_filter = ('user', 'following',)
-    empty_value_display = '-пусто-'
 
 
 admin.sites.AdminSite.empty_value_display = '-пусто-'
