@@ -103,7 +103,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-DATA_FILES_DIR = os.path.join(BASE_DIR, '..', 'data')
+DATA_FILES_DIR = os.path.join(BASE_DIR, 'data')
 FONTS_FILES_DIR = os.path.join(DATA_FILES_DIR, 'HelveticaRegular.ttf')
 
 # E-mail settings
