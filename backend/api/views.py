@@ -125,7 +125,7 @@ class RecipeViewSet(ModelViewSet):
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
     )
-    pagination_class = PageNumberPagination
+    # pagination_class = PageNumberPagination
     filterset_class = RecipeFilter
     filter_backends = [DjangoFilterBackend, ]
 
@@ -182,8 +182,7 @@ class RecipeViewSet(ModelViewSet):
     @action(
         detail=False,
         methods=['get'],
-        permission_classes=(permissions.IsAuthenticated,),
-        pagination_class=None
+        permission_classes=(permissions.IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
         """Позволяет текущему пользователю закрузить список покупок."""
