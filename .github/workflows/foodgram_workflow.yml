@@ -65,7 +65,7 @@ jobs:
             sudo usermod -aG docker ${{ secrets.USER }}
             docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
             docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
-            docker-compose down -v 
+            docker-compose down
             docker-compose rm backend
             docker-compose rm frontend
             docker system prune -f
