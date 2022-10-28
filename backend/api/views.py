@@ -118,6 +118,11 @@ class UsersViewSet(UserViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+class CustomPagination(PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 6
+
+
 class RecipeViewSet(ModelViewSet):
     """Вьюсет для модели Recipe."""
 
@@ -125,7 +130,7 @@ class RecipeViewSet(ModelViewSet):
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
     )
-    pagination_class = LimitOffsetPagination
+    pagination_class = CustomPagination
     filterset_class = RecipeFilter
     filter_backends = [DjangoFilterBackend, ]
 
