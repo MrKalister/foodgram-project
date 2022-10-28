@@ -125,7 +125,7 @@ class RecipeViewSet(ModelViewSet):
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
     )
-    pagination_class = PageNumberPagination
+    pagination_class = LimitOffsetPagination
     filterset_class = RecipeFilter
     filter_backends = [DjangoFilterBackend, ]
 
@@ -133,6 +133,11 @@ class RecipeViewSet(ModelViewSet):
         if self.request.method in SAFE_METHODS:
             return RecipeSerializer
         return CreateRecipeSerializer
+
+    def get_pagination_class(self):
+        if self.request.method == 'GET':
+            return None
+        return PageNumberPagination
 
     @staticmethod
     def post_method_for_actions(request, pk, serializer_req):
@@ -186,8 +191,8 @@ class RecipeViewSet(ModelViewSet):
     )
     def download_shopping_cart(self, request):
         """Позволяет текущему пользователю закрузить список покупок."""
-        self._paginator = None
-        self.pagination_class = None
+        # self._paginator = None
+        # self.pagination_class = None
         shopping_cart = (
             IngredientRecipe.objects.filter(
                 recipe__shopping_cart__user=request.user
