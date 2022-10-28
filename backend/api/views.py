@@ -187,6 +187,7 @@ class RecipeViewSet(ModelViewSet):
     def download_shopping_cart(self, request):
         """Позволяет текущему пользователю закрузить список покупок."""
         self._paginator = None
+        self.pagination_class = None
         shopping_cart = (
             IngredientRecipe.objects.filter(
                 recipe__shopping_cart__user=request.user
