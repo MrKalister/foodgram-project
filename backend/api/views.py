@@ -6,7 +6,10 @@ from djoser.conf import settings
 from djoser.views import UserViewSet
 from rest_framework import permissions, status
 from rest_framework.decorators import action
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import (
+    LimitOffsetPagination,
+    PageNumberPagination
+)
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
@@ -124,7 +127,7 @@ class RecipeViewSet(ModelViewSet):
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
     )
-    # pagination_class = PageNumberPagination
+    pagination_class = PageNumberPagination
     filterset_class = RecipeFilter
     filter_backends = [DjangoFilterBackend, ]
 
@@ -181,6 +184,7 @@ class RecipeViewSet(ModelViewSet):
     @action(
         detail=False,
         methods=['get'],
+        pagination_class=None,
         permission_classes=(permissions.IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
