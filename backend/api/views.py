@@ -134,6 +134,7 @@ class RecipeViewSet(ModelViewSet):
             return RecipeSerializer
         return CreateRecipeSerializer
 
+
     @staticmethod
     def post_method_for_actions(request, pk, serializer_req):
         """Для post запросов к shopping_cart и favorite."""
@@ -182,12 +183,11 @@ class RecipeViewSet(ModelViewSet):
     @action(
         detail=False,
         methods=['get'],
-        pagination_class=None,
         permission_classes=(permissions.IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
         """Позволяет текущему пользователю закрузить список покупок."""
-
+        self._paginator = None
         shopping_cart = (
             IngredientRecipe.objects.filter(
                 recipe__shopping_cart__user=request.user
