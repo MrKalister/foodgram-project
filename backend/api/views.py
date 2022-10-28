@@ -57,7 +57,6 @@ class TagViewSet(ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    pagination_class = None
     permission_classes = (permissions.AllowAny,)
 
 
@@ -66,7 +65,6 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    pagination_class = None
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientSearchFilter
     permission_classes = (permissions.AllowAny,)
@@ -128,7 +126,6 @@ class RecipeViewSet(ModelViewSet):
         permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
     )
     pagination_class = PageNumberPagination
-    pagination_class = None
     filterset_class = RecipeFilter
     filter_backends = [DjangoFilterBackend, ]
 
@@ -190,6 +187,7 @@ class RecipeViewSet(ModelViewSet):
     )
     def download_shopping_cart(self, request):
         """Позволяет текущему пользователю закрузить список покупок."""
+
         shopping_cart = (
             IngredientRecipe.objects.filter(
                 recipe__shopping_cart__user=request.user
