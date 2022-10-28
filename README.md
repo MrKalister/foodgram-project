@@ -188,7 +188,8 @@ scp nginx.conf <username>@<host>:/home/<username>/
 sudo usermod -aG docker username
 ```
 #### 5. Open bash terminal in container backend.
-##### After Workflow of the project.
+##### After Workflow of the project. 
+##### Steps 6-8 need to do, if you are doing this for the first time.
 
 ```
 docker-compose exec backend bash
