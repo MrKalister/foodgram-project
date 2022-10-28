@@ -6,9 +6,7 @@ from djoser.conf import settings
 from djoser.views import UserViewSet
 from rest_framework import permissions, status
 from rest_framework.decorators import action
-from rest_framework.pagination import (
-    LimitOffsetPagination
-)
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
@@ -40,6 +38,7 @@ from users.models import Follow, User
 
 class CustomTokenCreateView(views.TokenCreateView):
     """Для получения токена."""
+
     def _action(self, serializer):
         super()._action(serializer)
         token = utils.login_user(self.request, serializer.user)
@@ -72,6 +71,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 class UsersViewSet(UserViewSet):
     """Вьюсет для подписок, модель Follow."""
+
     pagination_class = LimitOffsetPagination
 
     @action(methods=['get'], detail=False)
