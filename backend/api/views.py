@@ -6,15 +6,13 @@ from djoser.conf import settings
 from djoser.views import UserViewSet
 from rest_framework import permissions, status
 from rest_framework.decorators import action
-from rest_framework.pagination import (
-    LimitOffsetPagination,
-    PageNumberPagination
-)
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from .filters import IngredientSearchFilter, RecipeFilter
+from .paginations import CustomPagination
 from .pdf_downloader import create_pdf_file
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
@@ -77,6 +75,7 @@ class UsersViewSet(UserViewSet):
 
     @action(methods=['get'], detail=False)
     def subscriptions(self, request):
+        """Возвращает авторов, на которых подписан пользователь."""
         recipes_limit = request.query_params['recipes_limit']
         authors = User.objects.filter(following__user=request.user)
         result_pages = self.paginate_queryset(
@@ -94,6 +93,7 @@ class UsersViewSet(UserViewSet):
 
     @action(methods=['post', 'delete'], detail=True)
     def subscribe(self, request, id):
+        """Позволяет добавить/удалить авторов в/из подписок."""
         if request.method != 'POST':
             subscription = Follow.objects.filter(
                 user=request.user,
@@ -118,11 +118,6 @@ class UsersViewSet(UserViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class CustomPagination(PageNumberPagination):
-    page_size_query_param = 'limit'
-    page_size = 6
-
-
 class RecipeViewSet(ModelViewSet):
     """Вьюсет для модели Recipe."""
 
@@ -135,14 +130,10 @@ class RecipeViewSet(ModelViewSet):
     filter_backends = [DjangoFilterBackend, ]
 
     def get_serializer_class(self):
+        """Выбирает сериализотор в зависимости от запроса."""
         if self.request.method in SAFE_METHODS:
             return RecipeSerializer
         return CreateRecipeSerializer
-
-    def get_pagination_class(self):
-        if self.request.method == 'GET':
-            return None
-        return PageNumberPagination
 
     @staticmethod
     def post_method_for_actions(request, pk, serializer_req):
@@ -196,8 +187,6 @@ class RecipeViewSet(ModelViewSet):
     )
     def download_shopping_cart(self, request):
         """Позволяет текущему пользователю закрузить список покупок."""
-        # self._paginator = None
-        # self.pagination_class = None
         shopping_cart = (
             IngredientRecipe.objects.filter(
                 recipe__shopping_cart__user=request.user

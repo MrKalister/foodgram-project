@@ -268,7 +268,6 @@ class CreateRecipeSerializer(ModelSerializer):
 
         Создан, чтобы подгрузить автора, теги и ингредиенты.
         """
-
         author = self.context.get('request').user
         tags_data = validated_data.pop('tags')
         ingredients_data = validated_data.pop('ingredients')
@@ -280,9 +279,9 @@ class CreateRecipeSerializer(ModelSerializer):
     def update(self, instance, validated_data):
         """
         Кастомный метод update.
+
         Создан, чтобы подгрузить автора, теги и ингредиенты.
         """
-
         recipe = instance
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
