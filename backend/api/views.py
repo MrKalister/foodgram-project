@@ -128,6 +128,7 @@ class RecipeViewSet(ModelViewSet):
         permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
     )
     pagination_class = PageNumberPagination
+    pagination_class = None
     filterset_class = RecipeFilter
     filter_backends = [DjangoFilterBackend, ]
 
