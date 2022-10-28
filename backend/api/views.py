@@ -182,7 +182,8 @@ class RecipeViewSet(ModelViewSet):
     @action(
         detail=False,
         methods=['get'],
-        permission_classes=(permissions.IsAuthenticated,)
+        permission_classes=(permissions.IsAuthenticated,),
+        pagination_class=None
     )
     def download_shopping_cart(self, request):
         """Позволяет текущему пользователю закрузить список покупок."""
