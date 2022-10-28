@@ -134,7 +134,6 @@ class RecipeViewSet(ModelViewSet):
             return RecipeSerializer
         return CreateRecipeSerializer
 
-
     @staticmethod
     def post_method_for_actions(request, pk, serializer_req):
         """Для post запросов к shopping_cart и favorite."""
