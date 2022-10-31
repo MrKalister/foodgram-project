@@ -221,17 +221,6 @@ python manage.py createsuperuser
 #### 9. Enjoy.
 open [URL](http://<your_ip_adress>/recipes) and enjoy.
 
-## Access to the admin panel:
-* ip-adress - 51.250.69.50
-* login - admin
-* password - admin
-* email - admin@yandex.ru
-
-### User:
-* login - megamozg
-* password - Qwerty123666
-* email - vetoschkin@yandex.ru
-
 ### Author
 
 **Novikov Maxim** - [github](http://github.com/MrKalister)
