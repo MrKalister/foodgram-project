@@ -234,4 +234,4 @@ open [URL](http://<your_ip_adress>/recipes) and enjoy.
 
 ### Author
 
-**Novikov Maxim - [github](http://github.com/MrKalister)**
+**Novikov Maxim** - [github](http://github.com/MrKalister)
