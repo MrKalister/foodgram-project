@@ -8,23 +8,6 @@ services:
     env_file:
       - ./.env
 
-  backend:
-    image: kalister/foodgram_backend:latest
-    restart: always
-    volumes:
-      - static_value:/app/static/
-      - media_value:/app/media/
-    depends_on:
-      - db
-    env_file:
-      - ./.env
-
-  frontend:
-    image: kalister/foodgram_frontend:latest
-    restart: always
-    volumes:
-      - ../frontend/:/app/result_build/
-
   nginx:
     image: nginx:1.19.3
     restart: always
@@ -37,8 +20,26 @@ services:
       - static_value:/var/html/static/
       - media_value:/var/html/media/
     depends_on:
-      - backend  
-      - frontend
+      - db  
+
+  backend:
+    image: kalister/foodgram_backend:latest
+    restart: always
+    volumes:
+      - static_value:/app/static/
+      - media_value:/app/media/
+    depends_on:
+      - db
+      - nginx
+    env_file:
+      - ./.env
+
+  frontend:
+    image: kalister/foodgram_frontend:latest
+    restart: always
+    volumes:
+      - ../frontend/:/app/result_build/
+
 
 volumes:
   postgres_data:

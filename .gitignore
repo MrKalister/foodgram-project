@@ -140,3 +140,6 @@ build/
 
 # .vscode
 .vscode
+
+# User_data
+supuser.txt
