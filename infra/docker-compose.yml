@@ -1,5 +1,11 @@
 version: '3.3'
 services:
+  frontend:
+    image: kalister/foodgram_frontend:latest
+    restart: always
+    volumes:
+      - ../frontend/:/app/result_build/
+
   db:
     image: postgres:13.0-alpine
     restart: always
@@ -7,6 +13,8 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./.env
+    depends_on:
+      - frontend 
 
   nginx:
     image: nginx:1.19.3
@@ -29,16 +37,9 @@ services:
       - static_value:/app/static/
       - media_value:/app/media/
     depends_on:
-      - db
       - nginx
     env_file:
       - ./.env
-
-  frontend:
-    image: kalister/foodgram_frontend:latest
-    restart: always
-    volumes:
-      - ../frontend/:/app/result_build/
 
 
 volumes:
