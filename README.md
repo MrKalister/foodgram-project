@@ -1,5 +1,5 @@
-# Foodgram is a website with many functions, the main one of which is to share your recipes.
-[Foodgram](http://foodmanager.sytes.net/recipes)
+# [Foodgram](http://foodmanager.sytes.net/recipes) is a website with many functions, the main one of which is to share your recipes.
+
 ![Build Status](https://github.com/MrKalister/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
 
 ## Tech.
